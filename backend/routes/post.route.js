@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { protectRoute } from "../middleware/auth.middleware";
+import { protectRoute } from "../middleware/auth.middleware.js";
 import {
   getFeedPosts,
   createPost,
@@ -7,7 +7,7 @@ import {
   getPostById,
   createComment,
   likePost,
-} from "../controllers/post.controller";
+} from "../controllers/post.controller.js";
 const router = Router();
 
 router.get("/", protectRoute, getFeedPosts);
