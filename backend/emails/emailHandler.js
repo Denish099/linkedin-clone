@@ -22,3 +22,30 @@ export const sendWelcomeEmail = async (email, name, profileUrl) => {
     throw error;
   }
 };
+
+export const sendCommentNotificationEmail = async (
+  recipientEmail,
+  recipientName,
+  commentorName,
+  postUrl,
+  commentContent
+) => {
+  const recipient = [{ email }];
+  try {
+    const response = await Client.send({
+      from: sender,
+      to: recipient,
+      subject: "New Comment on your post",
+      html: createCommentNotificationEmailTemplate(
+        recipientName,
+        commentorName,
+        postUrl,
+        commentContent
+      ),
+      category: "comment_Notification",
+    });
+    console.log(`comment email sent successfully ${response}`);
+  } catch (error) {
+    throw error;
+  }
+};
