@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "./lib/axios";
 
 function App() {
-  const { data: authUser } = useQuery({
+  const { data: authUser, isLoading } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {
       try {
@@ -24,6 +24,9 @@ function App() {
       }
     },
   });
+  if (isLoading) {
+    return null;
+  }
   return (
     <Layout>
       <Routes>

@@ -74,7 +74,11 @@ const SignUpForm = () => {
         />
       </div>
 
-      <button className="btn btn-primary w-full text-white my-2">
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="btn btn-primary w-full text-white my-2"
+      >
         {isLoading ? (
           <Loader className="size-5 animate-spin" />
         ) : (
