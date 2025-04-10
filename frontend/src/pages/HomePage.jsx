@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 import Sidebar from "../components/sidebar";
 import PostCreation from "../components/postCreation";
+import Post from "../components/post";
 
 const HomePage = () => {
   const { data: authUser } = useQuery({
@@ -24,9 +25,6 @@ const HomePage = () => {
     },
   });
 
-  console.log("recommended user", recommendedUser);
-  console.log("recommended post", posts);
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="hidden lg:block lg:colspan-1">
@@ -34,6 +32,9 @@ const HomePage = () => {
       </div>
       <div className="col-span-1 lg:col-span-2 order-first lg:order-none">
         <PostCreation user={authUser} />
+        {posts?.map((post) => (
+          <Post key={post._id} post={post} />
+        ))}
       </div>
     </div>
   );

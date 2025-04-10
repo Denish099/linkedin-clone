@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import axiosInstance from "../lib/axios";
 import toast from "react-hot-toast";
 import { Image, Loader } from "lucide-react";
@@ -8,6 +8,7 @@ const PostCreation = ({ user }) => {
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const queryClient = useQueryClient();
 
@@ -24,11 +25,16 @@ const PostCreation = ({ user }) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (err) => {
-      toast.error(err.response.data.message || "Failed to create post");
+      toast.error(err?.response?.data?.message || "Failed to create post");
     },
   });
 
   const handlePostCreation = async () => {
+    if (!content.trim() && !image) {
+      toast.error("Please add some content or upload an image.");
+      return;
+    }
+
     try {
       const postData = { content };
       if (image) postData.image = await readFileAsDataURL(image);
@@ -36,6 +42,7 @@ const PostCreation = ({ user }) => {
       createPostMutation(postData);
     } catch (error) {
       console.error("Error in handlePostCreation:", error);
+      toast.error("Something went wrong while creating the post.");
     }
   };
 
@@ -43,13 +50,17 @@ const PostCreation = ({ user }) => {
     setContent("");
     setImage(null);
     setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = null;
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setImage(file);
+
     if (file) {
-      readFileAsDataURL(file).then(setImagePreview);
+      readFileAsDataURL(file)
+        .then(setImagePreview)
+        .catch(() => toast.error("Failed to preview image."));
     } else {
       setImagePreview(null);
     }
@@ -92,10 +103,14 @@ const PostCreation = ({ user }) => {
 
       <div className="flex justify-between items-center mt-4">
         <div className="flex space-x-4">
-          <label className="flex items-center text-info hover:text-info-dark transition-colors duration-200 cursor-pointer">
+          <label
+            className="flex items-center text-info hover:text-info-dark transition-colors duration-200 cursor-pointer"
+            title="Add a photo"
+          >
             <Image size={20} className="mr-2" />
             <span>Photo</span>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
@@ -105,7 +120,7 @@ const PostCreation = ({ user }) => {
         </div>
 
         <button
-          className="bg-primary text-white rounded-lg px-4 py-2 hover:bg-primary-dark transition-colors duration-200"
+          className="bg-primary text-white rounded-lg px-4 py-2 hover:bg-primary-dark transition-colors duration-200 disabled:opacity-50"
           onClick={handlePostCreation}
           disabled={isPending}
         >
@@ -115,4 +130,5 @@ const PostCreation = ({ user }) => {
     </div>
   );
 };
+
 export default PostCreation;

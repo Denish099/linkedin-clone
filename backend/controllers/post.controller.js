@@ -6,7 +6,7 @@ import { sendCommentNotificationEmail } from "../emails/emailHandler.js";
 export const getFeedPosts = async (req, res) => {
   try {
     const posts = await Post.find({
-      author: { $in: req.user.connections },
+      author: { $in: [...req.user.connections, req.user._id] },
     })
       .populate("author", "name username profilePicture headlineTxt")
       .populate("comments.user", "name profilePicture")
@@ -56,28 +56,26 @@ export const deletePost = async (req, res) => {
     const post = await Post.findById(postId);
 
     if (!post) {
-      console.log("post does not exists");
-      return res.status(404).json({ message: "psot not found" });
+      console.log("Post does not exist");
+      return res.status(404).json({ message: "Post not found" });
     }
 
     if (post.author.toString() !== userId.toString()) {
-      return res.status(403).json({ message: "unauthorized user" });
+      return res.status(403).json({ message: "Unauthorized user" });
     }
 
     if (post.img) {
-      //delete a image from cloudinary
-      //it is stored in url format to get postId  we are spliting it
-      await cloudinary.uploader.destroy(
-        post.img.split("/").pop().split(".")[0]
-      );
+      // Delete the image from Cloudinary
+      const publicId = post.img.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
-    await post.findByIdAndDelete(postId);
+    await Post.findByIdAndDelete(postId);
 
-    res.status(200).json({ message: "post deleted successfulyl" });
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
-    console.error("error in delete post controller", error);
-    res.status(500).json({ message: "server error" });
+    console.error("Error in deletePost controller:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -144,17 +142,25 @@ export const createComment = async (req, res) => {
 export const likePost = async (req, res) => {
   try {
     const postId = req.params.id;
-    const post = Post.findById(postId);
     const userId = req.user._id;
-    if (post.likes.includes(userId)) {
-      //unlike the post
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const hasLiked = post.likes.includes(userId.toString());
+
+    if (hasLiked) {
+      // Unlike the post
       post.likes = post.likes.filter(
         (id) => id.toString() !== userId.toString()
       );
     } else {
-      //like the post
+      // Like the post
       post.likes.push(userId);
 
+      // Only notify if the liker is not the author
       if (post.author.toString() !== userId.toString()) {
         const newNotification = new Notification({
           recipient: post.author,
@@ -165,5 +171,16 @@ export const likePost = async (req, res) => {
         await newNotification.save();
       }
     }
-  } catch (error) {}
+
+    await post.save();
+
+    res.status(200).json({
+      message: hasLiked ? "Post unliked" : "Post liked",
+      likes: post.likes,
+      likesCount: post.likes.length,
+    });
+  } catch (error) {
+    console.error("Error in likePost controller:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
