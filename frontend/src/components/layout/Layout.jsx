@@ -7,7 +7,6 @@ const Layout = ({ children }) => {
     queryKey: ["authUser"],
   });
 
-  console.log("auth user is in layout", authUser);
   return (
     <div className="min-h-screen bg-base-100">
       <NavBar />

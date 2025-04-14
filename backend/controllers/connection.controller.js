@@ -9,13 +9,13 @@ export const sendConnectionReq = async (req, res) => {
     const senderId = req.user._id;
 
     if (userId.toString() === senderId.toString()) {
-      res
+      return res
         .status(400)
-        .json({ message: "tou cant send connection request to yourself" });
+        .json({ message: "You can't send a connection request to yourself" });
     }
 
-    if (req.user.connections.include(userId)) {
-      res.status(400).json({ message: "you are alreadly connected" });
+    if (req.user.connections.includes(userId)) {
+      return res.status(400).json({ message: "You are already connected" });
     }
 
     const existingReq = await connectionReq.findOne({
@@ -27,7 +27,7 @@ export const sendConnectionReq = async (req, res) => {
     if (existingReq) {
       return res
         .status(400)
-        .json({ message: "a connection request already exists" });
+        .json({ message: "A connection request already exists" });
     }
 
     const newReq = new connectionReq({
@@ -37,10 +37,10 @@ export const sendConnectionReq = async (req, res) => {
 
     await newReq.save();
 
-    res.status(201).json({ message: "a connection request is sent" });
+    res.status(201).json({ message: "Connection request sent successfully" });
   } catch (error) {
-    console.error(`error in sent connection request controller ${error}`);
-    res.status(500).json({ message: "server error" });
+    console.error(`Error in sendConnectionReq controller: ${error}`);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -55,26 +55,25 @@ export const acceptConnectionReq = async (req, res) => {
       .populate("recipient", "name username");
 
     if (!request) {
-      return res.status(404).json({ message: "connection request not found" });
+      return res.status(404).json({ message: "Connection request not found" });
     }
 
     if (request.recipient._id.toString() !== userId.toString()) {
-      return res
-        .status(400)
-        .json({ message: "Not authorized for this connection request" });
+      return res.status(400).json({
+        message: "Not authorized to accept this connection request",
+      });
     }
 
     if (request.status !== "pending") {
-      return res
-        .status(500)
-        .json({ message: "this request has already been processed" });
+      return res.status(400).json({
+        message: "This request has already been processed",
+      });
     }
 
     request.status = "accepted";
     await request.save();
 
-    //if i am tour friend then you are are also my friend
-
+    // If I'm your friend, you're also mine
     await User.findByIdAndUpdate(request.sender._id, {
       $addToSet: { connections: userId },
     });
@@ -85,34 +84,36 @@ export const acceptConnectionReq = async (req, res) => {
 
     const notification = new Notification({
       recipient: request.sender._id,
-      type: connectionAccepted,
+      type: "connectionAccepted", // make sure this matches your enum or string value
       relatedUser: userId,
     });
 
     await notification.save();
 
-    res.json({ message: "accepted successfully" });
+    res.json({ message: "Connection request accepted successfully" });
 
+    // Send email notification
     const senderEmail = request.sender.email;
     const senderName = request.sender.name;
-
     const recipientName = request.recipient.name;
 
-    const profileurl =
-      process.env.PROFILEURL + "/profile/" + request.recipient.name;
+    const profileUrl = `${process.env.PROFILEURL}/profile/${encodeURIComponent(
+      request.recipient.username
+    )}`;
+
     try {
       await sendConnectionAcceptedEmail(
         senderEmail,
         senderName,
         recipientName,
-        profileurl
+        profileUrl
       );
-    } catch (error) {
-      console.error(`error in sendingEmail ${error}`);
+    } catch (emailError) {
+      console.error(`Error sending email: ${emailError}`);
     }
   } catch (error) {
-    console.error(`error in accept Connection request controller ${error}`);
-    res.status(500).json({ message: "internal server error" });
+    console.error(`Error in acceptConnectionReq controller: ${error}`);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -207,7 +208,7 @@ export const getConnectionStatus = async (req, res) => {
     const currUserId = req.user._id;
 
     const currUser = req.user;
-    if (currUser.connections.include(targetUserId)) {
+    if (currUser.connections.includes(targetUserId)) {
       return res.json({ status: "connected" });
     }
 

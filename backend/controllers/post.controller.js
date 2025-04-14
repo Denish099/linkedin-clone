@@ -21,16 +21,15 @@ export const getFeedPosts = async (req, res) => {
 
 export const createPost = async (req, res) => {
   try {
-    const { content, img } = req.body;
-
+    const { content, image } = req.body;
     let newPost;
 
-    if (img) {
-      const imgResult = await cloudinary.uploader.upload(img);
+    if (image) {
+      const imgResult = await cloudinary.uploader.upload(image);
       newPost = new Post({
         author: req.user._id,
         content,
-        img: imgResult.secure_url,
+        image: imgResult.secure_url,
       });
     } else {
       newPost = new Post({
@@ -43,11 +42,10 @@ export const createPost = async (req, res) => {
 
     res.status(201).json(newPost);
   } catch (error) {
-    console.error("error in createPost controller", error);
-    res.status(500).json({ message: "server error" });
+    console.error("Error in createPost controller:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 export const deletePost = async (req, res) => {
   try {
     const postId = req.params.id;

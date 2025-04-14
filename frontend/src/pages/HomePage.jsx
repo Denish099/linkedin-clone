@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 import Sidebar from "../components/sidebar";
 import PostCreation from "../components/postCreation";
+import RecommendedUser from "../components/recommenededUser";
 import Post from "../components/post";
 
 const HomePage = () => {
@@ -24,7 +25,7 @@ const HomePage = () => {
       return response.data;
     },
   });
-
+  console.log(posts);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <div className="hidden lg:block lg:colspan-1">
@@ -36,6 +37,16 @@ const HomePage = () => {
           <Post key={post._id} post={post} />
         ))}
       </div>
+      {recommendedUser?.length > 0 && (
+        <div className="col-span-1 lg:col-span-1 hidden lg:block">
+          <div className="bg-secondary rounded-lg shadow p-4">
+            <h2 className="front-semibold mb-4">People may you know</h2>
+            {recommendedUser.map((user) => (
+              <RecommendedUser key={user._id} user={user} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
