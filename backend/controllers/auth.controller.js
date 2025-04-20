@@ -8,26 +8,25 @@ config();
 export const signup = async (req, res) => {
   try {
     const { name, username, email, password } = req.body;
-    const existingEmail = await User.findOne({ email });
 
     if (!name || !username || !password || !email) {
-      res.status(400).json({ message: "all feild are mandantory" });
+      return res.status(400).json({ message: "All fields are mandatory" });
     }
 
+    const existingEmail = await User.findOne({ email });
     if (existingEmail) {
-      return res.status(400).json({ message: "email already exists" });
+      return res.status(400).json({ message: "Email already exists" });
     }
 
     const existingUsername = await User.findOne({ username });
-
     if (existingUsername) {
-      return res.status(400).json({ message: "username already exists" });
+      return res.status(400).json({ message: "Username already exists" });
     }
 
     if (password.length < 6) {
-      res
+      return res
         .status(400)
-        .json({ message: "password must be atleast of 6 characters" });
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -47,29 +46,26 @@ export const signup = async (req, res) => {
     });
 
     res.cookie("jwt-linkedin", token, {
-      httpOnly: true, //prevent xxs attack
+      httpOnly: true,
       maxAge: 3 * 24 * 60 * 60 * 1000,
-      sameSite: "strict", // prevent CSRF attack
-      secure: process.env.NODE_ENV === "production", //prevents man in the middle attacks
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
     });
 
-    res.status(201).json({ message: "user created successfully" });
+    res.status(201).json({ message: "User created successfully" });
 
-    const profileUrl = process.env.PROFILEURL + "/profile/" + user.username;
+    const profileUrl = `${process.env.PROFILEURL}/profile/${user.username}`;
     try {
       await sendWelcomeEmail(user.email, user.name, profileUrl);
     } catch (error) {
-      // Log a detailed error message
       console.error(`Error in sending email to ${user.email}:`, error.message);
-
-      // Optional: Add additional details from the error object if available
       if (error.response) {
         console.error("Error response from email service:", error.response);
       }
     }
   } catch (error) {
-    console.log(`error in signup : ${error.message}`);
-    res.status(400).json({ message: "internal server error" });
+    console.log(`Error in signup: ${error.message}`);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 

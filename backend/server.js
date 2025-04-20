@@ -24,7 +24,7 @@ app.use(
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/posts", postRoutes);
-app.use("/api/v1/notications", notificationRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/connections", connectionsRoutes);
 
 const Port = process.env.Port || 5000;

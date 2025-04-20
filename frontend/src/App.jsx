@@ -4,6 +4,7 @@ import Layout from "./components/layout/Layout";
 import HomePage from "./pages/HomePage";
 import SignUp from "./pages/auth/SignUp";
 import Login from "./pages/auth/Login";
+import NotificationsPage from "./pages/NotificationPage";
 
 import toast, { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -38,6 +39,10 @@ function App() {
         <Route
           path="/login"
           element={!authUser ? <Login /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/notifications"
+          element={authUser ? <NotificationsPage /> : <Navigate to="/login" />}
         />
       </Routes>
       <Toaster />
