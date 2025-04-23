@@ -6,8 +6,8 @@ import postRoutes from "./routes/post.route.js";
 import notificationRoutes from "./routes/notication.route.js";
 import connectionsRoutes from "./routes/connection.route.js";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import { connectDb } from "./lib/db.js";
+import cookieParser from "cookie-parser";
 
 config();
 
